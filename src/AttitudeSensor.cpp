@@ -16,9 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <testdog/unit_test.hpp>
-
-namespace Middleware {
 
 // first set vuzixConnected to false, later it will be tested
 bool AttitudeSensor::vuzixConnected = false;
@@ -680,4 +677,3 @@ void AttitudeSensor::toggleUseRoll() {
 	this->useRoll= (!this->useRoll);
 }	
 
-} /* End of namespace Middleware */
