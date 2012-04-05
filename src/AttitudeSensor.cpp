@@ -3,16 +3,6 @@
 
 #include <Logger.h>
 
-#ifdef WIN32
-#include "stdafx.h"
-#define IWEARDRV_EXPLICIT
-#include "iweardrv.h"
-#include <tchar.h>
-#include "stdio.h"
-#include "conio.h"
-#endif
-
-#ifdef UNIX
 #include <linux/types.h>
 #include <linux/input.h>
 #include <linux/hidraw.h>
@@ -27,42 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <testdog/unit_test.hpp>
-#endif
 
 namespace Middleware {
-
-#ifdef UNIX
-TDOG_TEST_SUITE(AttitudeSensorTest) {
-	TDOG_TEST_CASE(normalizeValue) {
-		TDOG_SET_AUTHOR("Jendrik und Justin");
-		int16_t min=100;
-		int16_t max=200;
-		int16_t sensdata=150;
-		float normalizedSensdata=AttitudeSensor::normalizeValue(min, max, sensdata);
-		TDOG_ASSERT_DOUBLE_EQUAL(normalizedSensdata, 0.0, 0.01);
-		
-		min=-150;
-		max=200;
-		sensdata=100;
-		normalizedSensdata=AttitudeSensor::normalizeValue(min, max, sensdata);
-		TDOG_ASSERT_DOUBLE_EQUAL(normalizedSensdata, 75.0, 0.01);
-	}
-	
-	TDOG_TEST_CASE(normalizeSensor) {
-		TDOG_SET_AUTHOR("Jendrik und Justin");
-		IWRSENSOR_PARSED calibMin={100,-150,-150};
-		IWRSENSOR_PARSED calibMax={200,200,200};
-		IWRSENSOR_PARSED sensor={150,100,100};
-
-		IWRSENSOR_PARSED_F 
-		normalizedSensdata=AttitudeSensor::normalizeSensor(calibMin, 
-		calibMax, sensor);
-		TDOG_ASSERT_DOUBLE_EQUAL(normalizedSensdata.x, 0.0, 0.01);
-		TDOG_ASSERT_DOUBLE_EQUAL(normalizedSensdata.y, 75.0, 0.01);
-		TDOG_ASSERT_DOUBLE_EQUAL(normalizedSensdata.z, 75.0, 0.01);
-	}
-}
-#endif 
 
 // first set vuzixConnected to false, later it will be tested
 bool AttitudeSensor::vuzixConnected = false;
@@ -85,7 +41,6 @@ AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 
 	head = new Head();
 
-#ifdef UNIX
 	this->fileDevice = open(
 		ATTITUDE_SENSOR_HIDRAW,
 		O_RDWR | O_NONBLOCK);
@@ -131,42 +86,6 @@ AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 	this->currentAccRoll = 0.0;
 	
 	this->vuzixConnected = true;
-#endif
-
-#ifdef WIN32
-    LOG(ATTITUDE_SENSOR_LOGGER_NAME) << 
-        "Using win32 init code." << Logger::endl;
-
-	// loading windows driver for vuzix
-    m_hIwear = LoadLibrary(_T("IWEARDRV.DLL"));
-
-	// driver successfully loaded
-    if (m_hIwear) {
-		// Proc address of each needed procedure will be caught
-		IWROpenTracker = (PIWROPENTRACKER)GetProcAddress(
-			m_hIwear, "IWROpenTracker");
-		IWRZeroSet = (PIWRZEROSET)GetProcAddress(
-			m_hIwear, "IWRZeroSet");
-		IWRGet6DTracking = (PIWRGET6DTRACKING)GetProcAddress(
-			m_hIwear, "IWRGet6DTracking");
-		IWRGetSensorData = (PIWRGETSENSORDATA)GetProcAddress(
-			m_hIwear, "IWRGetSensorData");
-		IWRGetMagYaw = (PIWRGETMAGYAW)GetProcAddress(
-			m_hIwear,"IWRGetMagYaw");
-		IWRSetMagAutoCorrect = (PIWRSETMAGAUTOCORRECT)GetProcAddress(
-			m_hIwear, "IWRSetMagAutoCorrect");
-		IWRGetVersion = (PIWRGETVERSION)GetProcAddress(
-			m_hIwear, "IWRGetVersion");
-
-		// starting the poll for getting data from the vuzix
-		try {
-			this->startPoll();
-		} catch (AttitudeSensorException &ex) {
-			LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-		}
-	}
-#endif
 }
 
 /** 
@@ -183,76 +102,6 @@ AttitudeSensor::~AttitudeSensor() {
 const Head* AttitudeSensor::getHeadDirection(){
 	return head;
 }
-
-
-#ifdef WIN32
-/** 
- * @brief This method resets the head direction
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
- */
-void AttitudeSensor::resetHeadDirection(){
-	IWRZeroSet();
-}
-#endif
-
-#ifdef WIN32
-/** 
- * @brief This method opens the tracker
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
- * @author Matthias Bruns <matthias.bruns@uni-oldenburg.de>
- */
-void AttitudeSensor::startPoll() throw (AttitudeSensorException) {
-
-	// opens the tracker
-	switch(IWROpenTracker()) {
-		case ERROR_SUCCESS:
-			// vuzix is connected
-			this->vuzixConnected = true;
-			break;
-		// Device is not connected, throw ex
-		case ERROR_DEV_NOT_EXIST: { 
-			this->vuzixConnected = false;
-			AttitudeSensorException ex 
-                (AttitudeSensorException::ERROR_VUZIX_NOT_EXIST);
-			
-            LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-				<< ex.message() << Logger::endl;
-			throw ex;
-			break;
-		}
-		// Not enough memory, throw ex
-		case ERROR_NOT_ENOUGH_MEMORY: { 
-			AttitudeSensorException ex 
-                (AttitudeSensorException::ERROR_VUZIX_NOT_ENOUGH_MEMORY);
-			
-            LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-				<< ex.message() << Logger::endl;
-			throw ex;
-			break;
-		}
-    }
-
-	// for pulling calibration data from V-Monitor
-	IWRVERSION ver;
-
-	// NECESSARY!! pulling calibration data from V-Monitor
-	if (IWRGetVersion(&ver) != ERROR_SUCCESS) {
-		AttitudeSensorException ex 
-            (AttitudeSensorException::ERROR_VUZIX_NO_CALIBRATION_DATA);
-
-		LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-			<< ex.message() << Logger::endl;
-		throw ex;
-	}
-
-	resetHeadDirection();
-
-	// using magneticfield-data for the yaw-value
-	IWRSetMagAutoCorrect(true);
-} 
-#endif
-
-#ifdef UNIX
 
 /**
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
@@ -830,112 +679,5 @@ void AttitudeSensor::toggleUsePitch() {
 void AttitudeSensor::toggleUseRoll() {
 	this->useRoll= (!this->useRoll);
 }	
-
-#endif
-
-/** 
- * @brief This method catches the data from the Vuzix and saves them to a struct.
- * 
- * WARNING: UNIX code only works on little endian architectures.
- *          Don't panic, x86 is little endian.
- *
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
- * @author Matthias Bruns <matthias.bruns@uni-oldenburg.de>
- * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
- * @author Justin Philip Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
- */
- #ifdef WIN32
-void AttitudeSensor::timerProc() throw (AttitudeSensorException) {
-
-	while (true) {
-		// If pointer is not yet allocated
-		if(this->head == NULL)
-			this->head = new Head();	
-
-		IWRSENSDATA sensdata;
-		LONG yaw = 0, pitch = 0, roll = 0, myaw = 0;
-        LONG xtrn = 0, ytrn = 0, ztrn = 0;
-
-		// if errors come up restart the poll
-		if (IWRGet6DTracking(&yaw, &pitch, &roll, &xtrn, &ytrn, &ztrn) 
-            != ERROR_SUCCESS) {
-			
-            try {
-				this->startPoll();
-			} catch (AttitudeSensorException &ex) {
-				LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-			}
-		}
-
-		// getting data from the vuzix
-		switch(IWRGetSensorData(&sensdata)) {
-			case ERROR_SUCCESS:
-				// everything went ok
-				break;
-			// Device does not support this function, throw ex
-			case ERROR_NOT_SUPPORTED: { 
-				AttitudeSensorException ex 
-                    (AttitudeSensorException::ERROR_VUZIX_NOT_SUPPORTED);
-				
-                LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-				throw ex;
-				break;
-			}
-
-			// Device is not connected, throw ex
-			case ERROR_DEV_NOT_EXIST: { 
-				this->vuzixConnected = false;
-				
-                AttitudeSensorException ex 
-                    (AttitudeSensorException::ERROR_VUZIX_NOT_EXIST);
-				
-                LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-				throw ex;
-				break;
-			}
-		}
-
-		// get lates yaw values
-		switch(IWRGetMagYaw(&myaw)) {
-			case ERROR_SUCCESS:
-				// everything went ok
-				break;
-			// Device does not support this function, throw ex
-			case ERROR_NOT_SUPPORTED: { 
-				
-                AttitudeSensorException ex 
-                    (AttitudeSensorException::ERROR_VUZIX_NOT_SUPPORTED);
-				
-                LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-				
-                throw ex;
-				break;
-			}
-
-			// Device is not connected, throw ex
-			case ERROR_DEV_NOT_EXIST: { 
-				this->vuzixConnected = false;
-
-				AttitudeSensorException ex 
-                    (AttitudeSensorException::ERROR_VUZIX_NOT_EXIST);
-				
-                LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-					<< ex.message() << Logger::endl;
-				throw ex;
-				break;
-			}
-		}
-
-		// angles in degree
-		this->head->angles.yawDeg = yaw/180;
-		this->head->angles.rollDeg = roll/180;
-		this->head->angles.pitchDeg = pitch/180;
-	}
-}
-#endif
 
 } /* End of namespace Middleware */
