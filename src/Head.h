@@ -1,7 +1,6 @@
-#ifndef Middleware_Head_h
-#define Middleware_Head_h
+#ifndef Head_h
+#define Head_h
 
-namespace Middleware {
 
 /** A head will be returned by the AttitudeSensor and
  * contains the angles of the current head direction
@@ -23,6 +22,5 @@ public:
 	void printToStdOut();
 };
 
-} /* End of namespace Middleware */
 
-#endif // Middleware_Head_h
+#endif // Head_h

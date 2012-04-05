@@ -1,7 +1,6 @@
 #include "Head.h"
 #include <stdio.h>
 
-using namespace Middleware;
 
 /** 
  * @brief constructor of Head

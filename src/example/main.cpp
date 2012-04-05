@@ -13,7 +13,7 @@ int main(){
 				run=false;
 				break;
 			}
-			this->attSensor->timerProc();
+			as->timerProc();
 			std::cout<<"bla"<<std::endl;
 		}
 	}

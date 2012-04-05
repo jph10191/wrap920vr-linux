@@ -6,8 +6,6 @@
 #include <linux/types.h>
 #include <linux/input.h>
 #include <linux/hidraw.h>
-#include <boost/thread/thread.hpp>
-#include <boost/date_time.hpp>
 #include <math.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -428,8 +426,7 @@ void AttitudeSensor::calibrate() {
 					ptrAccMax[k-3] = ptr[k];
 				}
 		}
-		boost::posix_time::milliseconds workTime(50);
-		boost::this_thread::sleep(workTime);
+		usleep(50000); //50 millis
 		printf("calibMin: %i %i %i %i %i %i \n", 
 		    this->calibMagMin.x,
 			this->calibMagMin.y,
@@ -474,9 +471,9 @@ IWRSENSOR_PARSED AttitudeSensor::estimateGyroBias() {
 	retVal.x = ((float) sums[0])/4000.0;
 	retVal.y = ((float) sums[1])/4000.0;
 	retVal.z = ((float) sums[2])/4000.0;
-	LOG("Gyroscope Bias x: %f", retVal.x);
-    LOG("Gyroscope Bias y: %f", retVal.y);
-    LOG("Gyroscope Bias z: %f", retVal.z);
+	LOG("Gyroscope Bias x: %d", retVal.x);
+    LOG("Gyroscope Bias y: %d", retVal.y);
+    LOG("Gyroscope Bias z: %d", retVal.z);
     LOG("Calibrate Gyro done");
 	return retVal;
 }	
