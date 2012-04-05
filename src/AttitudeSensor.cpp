@@ -16,9 +16,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
-#include <testdog/unit_test.hpp>
-
-namespace Middleware {
 
 // first set vuzixConnected to false, later it will be tested
 bool AttitudeSensor::vuzixConnected = false;
@@ -31,13 +28,7 @@ bool AttitudeSensor::vuzixConnected = false;
  */
 AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 
-    Logger::setLogger(
-        ATTITUDE_SENSOR_LOGGER_NAME, 
-        Logger::INFO, 
-        &std::cout);
-
-    LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-            << "AttitudeSensor instantiated." << Logger::endl;
+    LOG("AttitudeSensor instantiated.");
 
 	head = new Head();
 
@@ -46,9 +37,7 @@ AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 		O_RDWR | O_NONBLOCK);
 
 	if(this->fileDevice < 0) {
-		LOG(ATTITUDE_SENSOR_LOGGER_NAME) 
-			<< "Could not open device." << Logger::endl;
-		
+        LOG("Could not open device.");
 	    return;
 	}	
 	
@@ -108,7 +97,7 @@ const Head* AttitudeSensor::getHeadDirection(){
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
 void AttitudeSensor::readConfiguration(ifstream &configFile) {
-    LOG(ATTITUDE_SENSOR_LOGGER_NAME) << "Reading configuration" << Logger::endl;
+    LOG("Reading configuration");
     	
 	string line;
 	getline(configFile, line);
@@ -148,7 +137,8 @@ void AttitudeSensor::readConfiguration(ifstream &configFile) {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
 void AttitudeSensor::writeConfiguration() {
-	LOG(ATTITUDE_SENSOR_LOGGER_NAME) << "Writing configuration" << Logger::endl;
+	LOG("Writing configuration");
+    
     ofstream configFileOut("attitudesensor.conf");
     configFileOut << this->biasGyro.x<<endl;
 	configFileOut << this->biasGyro.y<<endl;
@@ -478,8 +468,8 @@ IWRSENSOR_PARSED AttitudeSensor::estimateGyroBias() {
 		//int16_t **ptr = (int16_t **) &parsed; //TODO wieso nicht?
 		int16_t *ptr = (int16_t *) &parsed;
 		for(int k = 6; k < 9; k++) {
-			LOG(ATTITUDE_SENSOR_LOGGER_NAME) <<
-                "sum["<<k-6<<"]+="<<ptr[k]<<"="<<sums[k-6]<<Logger::endl;
+			//LOG(ATTITUDE_SENSOR_LOGGER_NAME) <<
+            //    "sum["<<k-6<<"]+="<<ptr[k]<<"="<<sums[k-6]<<Logger::endl;
 			sums[k-6] += (long) ptr[k];
 		}
 	}
@@ -488,13 +478,10 @@ IWRSENSOR_PARSED AttitudeSensor::estimateGyroBias() {
 	retVal.x = ((float) sums[0])/4000.0;
 	retVal.y = ((float) sums[1])/4000.0;
 	retVal.z = ((float) sums[2])/4000.0;
-	LOG(ATTITUDE_SENSOR_LOGGER_NAME)<<"Gyroscope Bias x: "
-	<<retVal.x<<Logger::endl;
-	LOG(ATTITUDE_SENSOR_LOGGER_NAME)<<"Gyroscope Bias y: "
-	<<retVal.y<<Logger::endl;
-	LOG(ATTITUDE_SENSOR_LOGGER_NAME)<<"Gyroscope Bias z: " 
-	<<retVal.z<<Logger::endl;	
-	LOG(ATTITUDE_SENSOR_LOGGER_NAME)<<"Calibrate Gyro done"<<Logger::endl;
+	LOG("Gyroscope Bias x: %f", retVal.x);
+    LOG("Gyroscope Bias y: %f", retVal.y);
+    LOG("Gyroscope Bias z: %f", retVal.z);
+    LOG("Calibrate Gyro done");
 	return retVal;
 }	
 
@@ -680,4 +667,3 @@ void AttitudeSensor::toggleUseRoll() {
 	this->useRoll= (!this->useRoll);
 }	
 
-} /* End of namespace Middleware */
