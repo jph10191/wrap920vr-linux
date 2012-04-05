@@ -17,7 +17,6 @@
 
 using namespace std;
 
-namespace Middleware {
 
 	typedef struct tag_IWRSENSOR_PARSED {
         int16_t x, y, z;
@@ -156,4 +155,3 @@ public :
 		bool usePitch;
 		bool useRoll;		      
 };
-}
