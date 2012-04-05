@@ -1,18 +1,8 @@
-#pragma once
-
 #include "Head.h"
 #include "AttitudeSensorException.h"
 
-#ifdef WIN32
-#include "stdafx.h"
-#include <windows.h>
-#include <boost/thread/thread.hpp>
-#include <boost/date_time.hpp>
-#endif
-
 #define ATTITUDE_SENSOR_LOGGER_NAME "AttitudeSensor"
 
-#ifdef UNIX
 #include <stdlib.h>
 #include <stdint.h>
 #include <iostream>
@@ -27,11 +17,8 @@
 
 using namespace std;
 
-#endif
-
 namespace Middleware {
 
-#ifdef UNIX
 	typedef struct tag_IWRSENSOR_PARSED {
         int16_t x, y, z;
     } IWRSENSOR_PARSED;
@@ -61,7 +48,6 @@ namespace Middleware {
 		float measures[ATTITUDE_SENSOR_RINGBUFFER_SIZE]; 
 		unsigned int pointer;
 	} RINGBUFFER;
-#endif
 
 /*
  * @author Christian Herz <christian.herz@uni-oldenburg.de>
@@ -80,8 +66,6 @@ public :
 	void resetHeadDirection();
 	const Head* getHeadDirection(); 
 
-
-#ifdef UNIX
 	void toggleUseYaw(void);
 	void toggleUsePitch(void);
 	void toggleUseRoll(void);
@@ -171,14 +155,5 @@ public :
 		bool useYaw;
 		bool usePitch;
 		bool useRoll;		      
-#endif
-
-
-#ifdef WIN32
-    void startPoll();
-private:
-    HMODULE m_hIwear;
-#endif
-	   
 };
 }
