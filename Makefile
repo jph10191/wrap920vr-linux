@@ -3,5 +3,5 @@ INCLUDEDIR = src/
 CPPFLAGS  = -Wall -I$(INCLUDEDIR)
 SRC = src/AttitudeSensor.cpp src/Head.cpp src/example/main.cpp 
 
-example: 
+example $(SRC): 
 	$(CPP) $(CPPFLAGS) -o example $(SRC) 
