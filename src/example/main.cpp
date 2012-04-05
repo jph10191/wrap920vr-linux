@@ -9,7 +9,7 @@ int main(){
 	as = new AttitudeSensor();
 	if(as->vuzixConnected){
 		while(run){
-			if(as->vuzixConnected){
+			if(!as->vuzixConnected){
 				run=false;
 				break;
 			}
