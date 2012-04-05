@@ -22,9 +22,7 @@ bool AttitudeSensor::vuzixConnected = false;
 
 /** 
  * @brief  Constructor of AttitudeSensor
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
- * @author Matthias Bruns <matthias.bruns@uni-oldenburg.de>
  */
 AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 
@@ -79,14 +77,12 @@ AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
 
 /** 
  * @brief Destructor frees memory if allocated
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
  */
 AttitudeSensor::~AttitudeSensor() {
 	if(head) {
 		delete head;
 	}
 }
-
 
 const Head* AttitudeSensor::getHeadDirection(){
 	return head;
@@ -500,7 +496,6 @@ float AttitudeSensor::normalizeValue(
 // wrong...
 // float retVal=((float) value - ((float) min + (float) max)/2);
 
-
 	float retVal=
 		2.0f*
 		(((float)value - (float)min))/
@@ -545,8 +540,6 @@ IWRSENSOR_PARSED_F AttitudeSensor::normalizeSensor(
     retVal.x=normalizeValue(calibMin.x,calibMax.x,sensor.x);
 	retVal.y=normalizeValue(calibMin.y,calibMax.y,sensor.y);
 	retVal.z=normalizeValue(calibMin.z,calibMax.z,sensor.z);
-
-
 
     return retVal;
 }

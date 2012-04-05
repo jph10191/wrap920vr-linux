@@ -17,39 +17,36 @@
 
 using namespace std;
 
+typedef struct tag_IWRSENSOR_PARSED {
+    int16_t x, y, z;
+} IWRSENSOR_PARSED;
 
-	typedef struct tag_IWRSENSOR_PARSED {
-        int16_t x, y, z;
-    } IWRSENSOR_PARSED;
+typedef struct tag_IWRSENSOR_PARSED_F {
+    float x, y, z;
+} IWRSENSOR_PARSED_F;
 
-	typedef struct tag_IWRSENSOR_PARSED_F {
-        float x, y, z;
-    } IWRSENSOR_PARSED_F;
+typedef struct tag_IWRSENSDATA_PARSED {
+    IWRSENSOR_PARSED mag_sensor, acc_sensor, gyro_sensor;
+} IWRSENSDATA_PARSED;
 
-
-    typedef struct tag_IWRSENSDATA_PARSED {
-        IWRSENSOR_PARSED mag_sensor, acc_sensor, gyro_sensor;
-    } IWRSENSDATA_PARSED;
-
-    typedef struct tag_IWRSENSOR {
-        unsigned char x_lsb, x_msb, y_lsb, y_msb, z_lsb, z_msb;
-    } IWRSENSOR, *PIWRSENSOR;
+typedef struct tag_IWRSENSOR {
+    unsigned char x_lsb, x_msb, y_lsb, y_msb, z_lsb, z_msb;
+} IWRSENSOR, *PIWRSENSOR;
     
-    typedef struct tag_IWRSENSDATA {
-        IWRSENSOR mag_sensor, acc_sensor, gyro_sensor;
-    } IWRSENSDATA, *PIWRSENSDATA;
+typedef struct tag_IWRSENSDATA {
+    IWRSENSOR mag_sensor, acc_sensor, gyro_sensor;
+} IWRSENSDATA, *PIWRSENSDATA;
 
-	typedef struct tag_ANGLES {
-		float yaw, pitch, roll;
-	} ANGLES;
+typedef struct tag_ANGLES {
+    float yaw, pitch, roll;
+} ANGLES;
 	
-	typedef struct tag_RINGBUFFER {
-		float measures[ATTITUDE_SENSOR_RINGBUFFER_SIZE]; 
-		unsigned int pointer;
-	} RINGBUFFER;
+typedef struct tag_RINGBUFFER {
+    float measures[ATTITUDE_SENSOR_RINGBUFFER_SIZE]; 
+	unsigned int pointer;
+} RINGBUFFER;
 
 /*
- * @author Christian Herz <christian.herz@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
