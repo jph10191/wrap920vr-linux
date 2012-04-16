@@ -40,72 +40,57 @@ either expressed or implied, of the FreeBSD Project.
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // first set vuzixConnected to false, later it will be tested
 bool AttitudeSensor::vuzixConnected = false;
 
-/** 
- * @brief  Constructor of AttitudeSensor
- * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
- */
-AttitudeSensor::AttitudeSensor() {
+ATTITUDE_SENSOR* attitude_sensor_new() {
 
-    LOG("AttitudeSensor instantiated.");
+    ATTITUDE_SENSOR *sensor;
+    sensor = (ATTITUDE_SENSOR *) malloc(sizeof(ATTITUDE_SENSOR));
 
-	head = new Head();
-
-	this->fileDevice = open(
+    sensor->fileDevice = open(
 		ATTITUDE_SENSOR_HIDRAW,
 		O_RDWR | O_NONBLOCK);
 
-	if(this->fileDevice < 0) {
+	if(sensor->fileDevice < 0) {
         LOG("Could not open device.");
 	    return;
 	}	
 	
-	this->zeroAngles.yaw = 0.0;
-	this->zeroAngles.pitch = 0.0;
-	this->zeroAngles.roll = 0.0;
-	this->currentAngles.yaw = 0.0;
-	this->currentAngles.pitch = 0.0;
-	this->currentAngles.roll = 0.0;
-	this->useYaw = true;
-	this->usePitch = true;
-	this->useRoll = true;
-
-	// Try to read config file
-	ifstream configFile;
-	configFile.open("attitudesensor.conf");
+	sensor->zeroAngles.yaw = 0.0;
+	sensor->zeroAngles.pitch = 0.0;
+	sensor->zeroAngles.roll = 0.0;
+	sensor->currentAngles.yaw = 0.0;
+	sensor->currentAngles.pitch = 0.0;
+	sensor->currentAngles.roll = 0.0;
+	sensor->useYaw = true;
+	sensor->usePitch = true;
+	sensor->useRoll = true;
 
 	if(configFile.is_open()){
-		//read calibration data from config file
-        this->readConfiguration(configFile);
+        sensor->read_configuration("attitudesensor.conf");
 	} else{
-		this->biasGyro = this->estimateGyroBias();
-		this->calibrate();
-        this->writeConfiguration();
+		sensor->biasGyro = sensor->estimate_gyro_bias();
+		sensor->calibrate();
+        sensor->write_configuration();
 	}
 
-	for(int i=0; i<ATTITUDE_SENSOR_RINGBUFFER_SIZE; i++){
-		this->ringbufferAccPitch.measures[i]=0.0;
-		this->ringbufferAccRoll.measures[i]=0.0;
+	for(int i=0; i < ATTITUDE_SENSOR_RINGBUFFER_SIZE; i++){
+		sensor->ringbufferAccPitch.measures[i] = 0.0;
+		sensor->ringbufferAccRoll.measures[i] = 0.0;
 	}
 
-	this->ringbufferAccPitch.pointer = 0;
-	this->ringbufferAccRoll.pointer = 0;
-	this->currentAccPitch = 0.0;
-	this->currentAccRoll = 0.0;
+	sensor->ringbufferAccPitch.pointer = 0;
+	sensor->ringbufferAccRoll.pointer = 0;
+    sensor->currentAccPitch = 0.0;
+	sensor->currentAccRoll = 0.0;
 	
-	this->vuzixConnected = true;
-}
-
-/** 
- * @brief Destructor frees memory if allocated
- */
-AttitudeSensor::~AttitudeSensor() {
-	if(head) {
-		delete head;
-	}
+	sensor->vuzixConnected = true;
+  
+    LOG("AttitudeSensor instantiated.");
+    return sensor;
 }
 
 const Head* AttitudeSensor::getHeadDirection(){
