@@ -105,18 +105,21 @@ typedef struct tag_ATTITUDE_SENSOR {
 class AttitudeSensor {
 
 public :
-    AttitudeSensor();
-	~AttitudeSensor();
-    void timerProc();
-	void resetHeadDirection();
-	const Head* getHeadDirection(); 
+	static bool vuzixConnected;
+	Head* head;
 
-	void toggleUseYaw(void);
-	void toggleUsePitch(void);
-	void toggleUseRoll(void);
+    attitude_sensor_new();
+    attitude_sensor_delete();
+    void timerProc(ATTITUDE_SENSOR &self );
+	void resetHeadDirection(ATTITUDE_SENSOR &self);
+	const Head* getHeadDirection(ATTITUDE_SENSOR &self); 
 
-    void readConfiguration(ifstream &configFile);
-    void writeConfiguration(void);
+	void toggleUseYaw(ATTITUDE_SENSOR &self);
+	void toggleUsePitch(ATTITUDE_SENSOR &self);
+	void toggleUseRoll(ATTITUDE_SENSOR &self);
+
+    void readConfiguration(ATTITUDE_SENSOR &self, ifstream &configFile);
+    void writeConfiguration(ATTITUDE_SENSOR &self);
 
 	static float normalizeValue(
         int16_t &min, 
@@ -169,10 +172,9 @@ public :
 
 	static float geometricDistribution(float p, int k);
 
-	IWRSENSOR_PARSED estimateGyroBias();
-	void calibrate();
+	void calibrate(ATTITUDE_SENSOR &self);
 	//void calculateAngles(double & yaw, double & pitch, double & roll, bool useCalib);
-	void receive();
+	void receive(ATTITUDE_SENSOR &self);
 
-	IWRSENSDATA_PARSED parseData();
+	IWRSENSDATA_PARSED parseData(ATTITUDE_SENSOR &self);
 };
