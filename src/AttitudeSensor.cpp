@@ -28,7 +28,6 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include "AttitudeSensor.h"
-#include "AttitudeSensorException.h"
 
 #include <Logger.h>
 
@@ -51,7 +50,7 @@ bool AttitudeSensor::vuzixConnected = false;
  * @brief  Constructor of AttitudeSensor
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-AttitudeSensor::AttitudeSensor() throw (AttitudeSensorException) {
+AttitudeSensor::AttitudeSensor() {
 
     LOG("AttitudeSensor instantiated.");
 
@@ -599,7 +598,7 @@ IWRSENSDATA_PARSED AttitudeSensor::parseData() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::timerProc() throw (AttitudeSensorException){
+void AttitudeSensor::timerProc() {
 	if(!this->vuzixConnected){
 			return;
 	}

@@ -28,7 +28,6 @@ either expressed or implied, of the FreeBSD Project.
 */
 
 #include "Head.h"
-#include "AttitudeSensorException.h"
 
 #define ATTITUDE_SENSOR_LOGGER_NAME "AttitudeSensor"
 
@@ -85,9 +84,9 @@ public :
 	static bool vuzixConnected;
 	Head* head;
 
-    AttitudeSensor() throw (AttitudeSensorException);
+    AttitudeSensor();
 	~AttitudeSensor();
-    void timerProc() throw (AttitudeSensorException);
+    void timerProc();
 	void resetHeadDirection();
 	const Head* getHeadDirection(); 
 

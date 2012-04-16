@@ -45,7 +45,6 @@ public:
 		float rollDeg;
 		float pitchDeg;
 	} HeadDirection;
-
 	HeadDirection angles;
 
 	void printToStdOut();
