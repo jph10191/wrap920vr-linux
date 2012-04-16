@@ -41,8 +41,6 @@ either expressed or implied, of the FreeBSD Project.
 #include <string.h>
 #include <stdio.h>
 
-// first set vuzixConnected to false, later it will be tested
-bool AttitudeSensor::vuzixConnected = false;
 
 /** 
  * @brief  Constructor of AttitudeSensor
@@ -81,7 +79,7 @@ AttitudeSensor::AttitudeSensor() {
 		//read calibration data from config file
         this->readConfiguration(configFile);
 	} else{
-		this->biasGyro = this->estimateGyroBias();
+		this->biasGyro = this->estimate_gyro_bias();
 		this->calibrate();
         this->writeConfiguration();
 	}
@@ -108,15 +106,15 @@ AttitudeSensor::~AttitudeSensor() {
 	}
 }
 
-const Head* AttitudeSensor::getHeadDirection(){
-	return head;
+const HEAD_DIRECTION* get_head_direction(ATTITUDE_SENSOR &self){
+	return self.head;
 }
 
 /**
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
-void AttitudeSensor::readConfiguration(ifstream &configFile) {
+void read_configuration(ATTITUDE_SENSOR &self, const char * configFile) {
     LOG("Reading configuration");
     	
 	string line;
@@ -156,7 +154,7 @@ void AttitudeSensor::readConfiguration(ifstream &configFile) {
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
-void AttitudeSensor::writeConfiguration() {
+void write_configuration(ATTITUDE_SENSOR &self) {
 	LOG("Writing configuration");
     
     ofstream configFileOut("attitudesensor.conf");
@@ -183,7 +181,7 @@ void AttitudeSensor::writeConfiguration() {
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
-void AttitudeSensor::receive() {
+void receive() {
 
 	bytesRead = read(
 		this->fileDevice, 
@@ -196,7 +194,7 @@ void AttitudeSensor::receive() {
 			&this->sensdata, 
 			&buf[2],  //offset
 			sizeof(unsigned char) * 24);
-		this->parsed = this->parseData();
+		this->parsed = this->parse_data();
 	}
 }
 
@@ -204,7 +202,7 @@ void AttitudeSensor::receive() {
  * @author Justin Philipp Heinermann<justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-ANGLES AttitudeSensor::calculateAngles( 
+ANGLES calculate_angles( 
 		ANGLES &currentAngles,		
 		IWRSENSOR_PARSED_F &normalizedMagSensorData, 
 		IWRSENSOR_PARSED_F &normalizedAccSensorData, 
@@ -217,10 +215,10 @@ ANGLES AttitudeSensor::calculateAngles(
 
 	ANGLES retVal;
 
-	retVal.yaw = AttitudeSensor::calculateYaw(normalizedMagSensorData, 
+	retVal.yaw = calculate_yaw(normalizedMagSensorData, 
 		normalizedGyrSensorData, currentGyro,currentAngles.yaw, currentAccPitch, currentAccRoll);
 
-	retVal.pitch = AttitudeSensor::calculatePitch(
+	retVal.pitch = calculatePitch(
             currentAngles.pitch, 
 		    normalizedAccSensorData, 
 			normalizedGyrSensorData, 
@@ -228,7 +226,7 @@ ANGLES AttitudeSensor::calculateAngles(
 			ringbufferAccPitch, 
 			currentAccPitch);
 	
-	retVal.roll = AttitudeSensor::calculateRoll(
+	retVal.roll = calculate_roll(
 			currentAngles.roll,
 			normalizedAccSensorData, 
 			normalizedGyrSensorData, 
@@ -249,7 +247,7 @@ ANGLES AttitudeSensor::calculateAngles(
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
-float AttitudeSensor::calculatePitch(
+float calculatePitch(
 	float &currentPitch,
 	IWRSENSOR_PARSED_F &normalizedAccSensorData,
 	IWRSENSOR_PARSED
@@ -276,7 +274,7 @@ float AttitudeSensor::calculatePitch(
 			(ringbufferAccPitch.pointer + i) % 
                 ATTITUDE_SENSOR_RINGBUFFER_SIZE;
 		
-        float coefficient=geometricDistribution(
+        float coefficient=geometric_distribution(
 				ATTITUDE_SENSOR_GEOMETRIC_PROBABILITY,
 				i);
 
@@ -312,7 +310,7 @@ float AttitudeSensor::calculatePitch(
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-float AttitudeSensor::calculateRoll(
+float calculate_roll(
 	float &currentRoll,
 	IWRSENSOR_PARSED_F &normalizedAccSensorData,
 	IWRSENSOR_PARSED &normalizedGyrSensorData, 
@@ -337,7 +335,7 @@ float AttitudeSensor::calculateRoll(
 		unsigned int currentIndex =
 			(ringbufferAccRoll.pointer + i) % ATTITUDE_SENSOR_RINGBUFFER_SIZE;
 	
-        float coefficient = geometricDistribution(
+        float coefficient = geometric_distribution(
 				ATTITUDE_SENSOR_GEOMETRIC_PROBABILITY,i);
 		
         accAvg += coefficient * ringbufferAccRoll.measures[currentIndex];	
@@ -369,7 +367,7 @@ float AttitudeSensor::calculateRoll(
  * @author Justin Philipp Heinermann<justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-float AttitudeSensor::calculateYaw(
+float calculate_yaw(
     IWRSENSOR_PARSED_F &normalizedMagSensorData, 
     IWRSENSOR_PARSED &normalizedGyrSensorData, 
     ANGLES &currentGyro,
@@ -411,7 +409,7 @@ float AttitudeSensor::calculateYaw(
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-float AttitudeSensor::geometricDistribution(float p, int k){
+float geometric_distribution(float p, int k){
 	return p * pow((1-p), k-1);
 }
 
@@ -419,7 +417,7 @@ float AttitudeSensor::geometricDistribution(float p, int k){
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::calibrate() {
+void calibrate() {
 	receive();
 	
     this->calibMagMin=parsed.mag_sensor;
@@ -475,7 +473,7 @@ void AttitudeSensor::calibrate() {
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  */
-IWRSENSOR_PARSED AttitudeSensor::estimateGyroBias() {
+IWRSENSOR_PARSED estimate_gyro_bias() {
 	IWRSENSOR_PARSED retVal;
 	long sums[3]={0,0,0};	
 
@@ -508,7 +506,7 @@ IWRSENSOR_PARSED AttitudeSensor::estimateGyroBias() {
  * @author Justin Philipp Heinermann<justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-float AttitudeSensor::normalizeValue(
+float normalizeValue(
     int16_t &min, 
     int16_t &max,
     int16_t &value){
@@ -536,7 +534,7 @@ float AttitudeSensor::normalizeValue(
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-IWRSENSOR_PARSED AttitudeSensor::normalizeGyro(
+IWRSENSOR_PARSED normalize_gyro(
     IWRSENSOR_PARSED &biasGyro, 
 	IWRSENSOR_PARSED &sensor){
 
@@ -553,7 +551,7 @@ IWRSENSOR_PARSED AttitudeSensor::normalizeGyro(
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-IWRSENSOR_PARSED_F AttitudeSensor::normalizeSensor(
+IWRSENSOR_PARSED_F normalize_sensor(
     IWRSENSOR_PARSED &calibMin,  
 	IWRSENSOR_PARSED &calibMax, 
     IWRSENSOR_PARSED &sensor) {
@@ -571,7 +569,7 @@ IWRSENSOR_PARSED_F AttitudeSensor::normalizeSensor(
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann<justin.philipp.heinermann@uni-oldenburg.de>
  */
-IWRSENSDATA_PARSED AttitudeSensor::parseData() {
+IWRSENSDATA_PARSED parse_data() {
 
 	IWRSENSDATA_PARSED ret;
 	unsigned char *ptrData = (unsigned char*) &this->sensdata;
@@ -596,7 +594,7 @@ IWRSENSDATA_PARSED AttitudeSensor::parseData() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::timerProc() {
+void timer_proc() {
 	if(!this->vuzixConnected){
 			return;
 	}
@@ -605,23 +603,23 @@ void AttitudeSensor::timerProc() {
 	double yaw, pitch, roll;
 	
 	IWRSENSOR_PARSED_F normalizedMagSensorData =
-	    AttitudeSensor::normalizeSensor(
+	    normalize_sensor(
         this->calibMagMin, 
 	    this->calibMagMax, 
         this->parsed.mag_sensor);
 	
 	IWRSENSOR_PARSED_F normalizedAccSensorData = 
-        AttitudeSensor::normalizeSensor(
+        normalize_sensorparse_data(
         this->calibAccMin, 
 	    this->calibAccMax, 
         this->parsed.acc_sensor);
 
 	IWRSENSOR_PARSED normalizedGyrSensorData = 
-	    AttitudeSensor::normalizeGyro(
+	    normalize_gyro(
         this->biasGyro, 
 	    this->parsed.gyro_sensor);	
 	
-	ANGLES angles=AttitudeSensor::calculateAngles(
+	ANGLES angles=calculate_angles(
 	    this->currentAngles,		
 	    normalizedMagSensorData, 
 	    normalizedAccSensorData, 
@@ -650,7 +648,7 @@ void AttitudeSensor::timerProc() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::resetHeadDirection() {
+void reset_head_direction() {
 	this->zeroAngles.yaw=this->currentGyro.yaw;
 	this->zeroAngles.pitch=this->currentAngles.pitch;
 	this->zeroAngles.roll=this->currentAngles.roll;
@@ -663,7 +661,7 @@ void AttitudeSensor::resetHeadDirection() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::toggleUseYaw() {
+void toggle_use_yaw() {
 	this->useYaw= (!this->useYaw);
 }	
 
@@ -671,7 +669,7 @@ void AttitudeSensor::toggleUseYaw() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::toggleUsePitch() {
+void toggle_use_pitch() {
 	this->usePitch= (!this->usePitch);
 }	
 
@@ -679,7 +677,7 @@ void AttitudeSensor::toggleUsePitch() {
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  */
-void AttitudeSensor::toggleUseRoll() {
+void toggle_use_roll() {
 	this->useRoll= (!this->useRoll);
 }	
 
