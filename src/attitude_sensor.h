@@ -83,6 +83,7 @@ typedef struct tag_ATTITUDE_SENSOR {
     int fileDevice, bytesRead;
 	unsigned char buf[28]; //TODO magic
 
+	HEAD_DIRECTION head_direction;
     static bool vuzixConnected;
 	
     IWRSENSDATA sensdata;
@@ -102,44 +103,34 @@ typedef struct tag_ATTITUDE_SENSOR {
 	RINGBUFFER ringbufferAccRoll;		
 } ATTITUDE_SENSOR;
 
-/*
- * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
- * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
- */
-class AttitudeSensor {
+    ATTITUDE_SENSOR * attitude_sensor_new();
+    void attitude_sensor_delete();
+    void timer_proc(ATTITUDE_SENSOR &self );
+	void reset_headDirection(ATTITUDE_SENSOR &self);
+	const HEAD_DIRECTION* getHeadDirection(ATTITUDE_SENSOR &self); 
 
-public :
-	static bool vuzixConnected;
-	Head* head;
+	void toggle_use_yaw(ATTITUDE_SENSOR &self);
+	void toggle_use_pitch(ATTITUDE_SENSOR &self);
+	void toggle_use_roll(ATTITUDE_SENSOR &self);
 
-    attitude_sensor_new();
-    attitude_sensor_delete();
-    void timerProc(ATTITUDE_SENSOR &self );
-	void resetHeadDirection(ATTITUDE_SENSOR &self);
-	const Head* getHeadDirection(ATTITUDE_SENSOR &self); 
+    void read_configuration(ATTITUDE_SENSOR &self, const char * configFile);
+    void write_configuration(ATTITUDE_SENSOR &self);
 
-	void toggleUseYaw(ATTITUDE_SENSOR &self);
-	void toggleUsePitch(ATTITUDE_SENSOR &self);
-	void toggleUseRoll(ATTITUDE_SENSOR &self);
-
-    void readConfiguration(ATTITUDE_SENSOR &self, ifstream &configFile);
-    void writeConfiguration(ATTITUDE_SENSOR &self);
-
-	static float normalizeValue(
+	float normalize_value(
         int16_t &min, 
         int16_t &max,  
         int16_t &value);
 	
-	static IWRSENSOR_PARSED_F normalizeSensor(
+	IWRSENSOR_PARSED_F normalize_sensor(
         IWRSENSOR_PARSED &calibMin,  
 	    IWRSENSOR_PARSED &calibMax, 
         IWRSENSOR_PARSED &sensor);
 	
-	static IWRSENSOR_PARSED normalizeGyro(
+	IWRSENSOR_PARSED normalize_gyro(
         IWRSENSOR_PARSED &biasGyro, 
 	    IWRSENSOR_PARSED &sensor );
 	
-	static ANGLES calculateAngles( 
+	ANGLES calculate_angles( 
 		ANGLES & currentAngles,		
 		IWRSENSOR_PARSED_F &normalizedMagSensorData, 
 		IWRSENSOR_PARSED_F &normalizedAccSensorData,
@@ -150,7 +141,7 @@ public :
 		float &currentAccPitch,
 		float &currentAccRoll);
 	
-	static float calculatePitch(
+	float calculate_pitch(
 	    float &currentPitch,		
 	    IWRSENSOR_PARSED_F &normalizedAccSensorData, 
 	    IWRSENSOR_PARSED &normalizedGyrSensorData, 
@@ -158,7 +149,7 @@ public :
 	    RINGBUFFER &ringbufferAccPitch, 
 	    float &currentAccPitch);
 
-	static float calculateRoll(
+	float calculate_roll(
 	    float &currentRoll,		
 	    IWRSENSOR_PARSED_F &normalizedAccSensorData, 
 	    IWRSENSOR_PARSED &normalizedGyrSensorData, 
@@ -166,7 +157,7 @@ public :
 	    RINGBUFFER &ringbufferAccRoll, 
 	    float &currentAccRoll);
 	
-	static float calculateYaw(
+	float calculate_yaw(
         IWRSENSOR_PARSED_F &normalizedMagSensorData, 
         IWRSENSOR_PARSED &normalizedGyrSensorData, 
 	    ANGLES &currentGyro,
@@ -174,7 +165,7 @@ public :
 		float &currentPitch,
 		float &currentRoll);
 
-	static float geometricDistribution(float p, int k);
+	float geometric_distribution(float p, int k);
 
 	void calibrate(ATTITUDE_SENSOR &self);
 	//void calculateAngles(double & yaw, double & pitch, double & roll, bool useCalib);
