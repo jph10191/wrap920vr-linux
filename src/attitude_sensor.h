@@ -39,6 +39,12 @@ either expressed or implied, of the FreeBSD Project.
 
 using namespace std;
 
+typedef struct tag_HEAD_DIRECTION {
+	float yawDeg;
+	float rollDeg;
+	float pitchDeg;
+} HEAD_DIRECTION;
+
 typedef struct tag_IWRSENSOR_PARSED {
     int16_t x, y, z;
 } IWRSENSOR_PARSED;
