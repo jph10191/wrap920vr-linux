@@ -27,10 +27,6 @@ of the authors and should not be interpreted as representing official policies,
 either expressed or implied, of the FreeBSD Project.
 */
 
-#include "Head.h"
-
-#define ATTITUDE_SENSOR_LOGGER_NAME "AttitudeSensor"
-
 #include <stdlib.h>
 #include <stdint.h>
 
