@@ -37,6 +37,8 @@ either expressed or implied, of the FreeBSD Project.
 #define ATTITUDE_SENSOR_RINGBUFFER_SIZE 10 
 #define ATTITUDE_SENSOR_GEOMETRIC_PROBABILITY 0.5
 
+#define LOG(string, args...) printf (string"\n", ##args)
+
 using namespace std;
 
 typedef struct tag_IWRSENSOR_PARSED {
