@@ -29,10 +29,10 @@ either expressed or implied, of the FreeBSD Project.
 
 #include "Head.h"
 
+#define ATTITUDE_SENSOR_LOGGER_NAME "AttitudeSensor"
+
 #include <stdlib.h>
 #include <stdint.h>
-#include <iostream>
-#include <fstream>
 
 #define ATTITUDE_SENSOR_VENDOR 0x1bae
 #define ATTITUDE_SENSOR_PRODUCT 0x014b
@@ -72,6 +72,32 @@ typedef struct tag_RINGBUFFER {
 	unsigned int pointer;
 } RINGBUFFER;
 
+typedef struct tag_ATTITUDE_SENSOR {
+    bool useYaw, usePitch, useRoll;
+    float currentAccPitch;
+	float currentAccRoll;
+    int fileDevice, bytesRead;
+	unsigned char buf[28]; //TODO magic
+
+    static bool vuzixConnected;
+	
+    IWRSENSDATA sensdata;
+	IWRSENSDATA_PARSED parsed;
+	IWRSENSOR_PARSED calibMagMin;
+	IWRSENSOR_PARSED calibMagMax;
+	IWRSENSOR_PARSED calibAccMin;
+	IWRSENSOR_PARSED calibAccMax;
+	IWRSENSOR_PARSED biasGyro;
+
+	ANGLES zeroAngles;
+	ANGLES currentGyro;
+	ANGLES currentAcc;
+	ANGLES currentAngles;
+
+	RINGBUFFER ringbufferAccPitch;
+	RINGBUFFER ringbufferAccRoll;		
+} ATTITUDE_SENSOR;
+
 /*
  * @author Jendrik Poloczek <jendrik.poloczek@uni-oldenburg.de>
  * @author Justin Philipp Heinermann <justin.philipp.heinermann@uni-oldenburg.de>
@@ -79,9 +105,6 @@ typedef struct tag_RINGBUFFER {
 class AttitudeSensor {
 
 public :
-	static bool vuzixConnected;
-	Head* head;
-
     AttitudeSensor();
 	~AttitudeSensor();
     void timerProc();
@@ -146,35 +169,10 @@ public :
 
 	static float geometricDistribution(float p, int k);
 
-	int fileDevice, bytesRead;
-	IWRSENSDATA sensdata;
-	IWRSENSDATA_PARSED parsed;
-	IWRSENSOR_PARSED calibMagMin;
-	IWRSENSOR_PARSED calibMagMax;
-	IWRSENSOR_PARSED calibAccMin;
-	IWRSENSOR_PARSED calibAccMax;
-	IWRSENSOR_PARSED biasGyro;
-
-	ANGLES zeroAngles;
-	ANGLES currentGyro;
-	ANGLES currentAcc;
-	ANGLES currentAngles;
-
-	RINGBUFFER ringbufferAccPitch;
-	RINGBUFFER ringbufferAccRoll;
-	float currentAccPitch;
-	float currentAccRoll;
-
-	unsigned char buf[28]; //TODO magic
 	IWRSENSOR_PARSED estimateGyroBias();
 	void calibrate();
 	//void calculateAngles(double & yaw, double & pitch, double & roll, bool useCalib);
 	void receive();
 
 	IWRSENSDATA_PARSED parseData();
-
-	private:
-		bool useYaw;
-		bool usePitch;
-		bool useRoll;		      
 };
