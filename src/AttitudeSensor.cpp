@@ -29,8 +29,6 @@ either expressed or implied, of the FreeBSD Project.
 
 #include "AttitudeSensor.h"
 
-#include <Logger.h>
-
 #include <linux/types.h>
 #include <linux/input.h>
 #include <linux/hidraw.h>
